@@ -7,17 +7,19 @@
 # the session manager is configured with a list of peers to connect to, consisting of a list of IP addresses
 # the BGP speaker uses just the well known TCP port 179
 
+import Talker
+import Listener
 
 class SessionManager:
 
-   def __init__(self,peerlist):
-   
+   def __init__(self,peerlist,timeout=10.0):
+      # self.timeout = timeoute
       self.peerlist = peerlist
       for peer in peerlist:
          peerstate = {}
          peers[peer] = peerstate
          peerstate[lock] = threading.lock()
-         self.thread = ActiveSession(args=(peer))
+         self.thread = ActiveSession(args=(peer,timeout))
          self.thread.start()
       self.passive_thread =  PassiveSession()
       self.passive_thread.start()
