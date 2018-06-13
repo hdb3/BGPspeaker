@@ -1,6 +1,4 @@
-import os.path
 import errno
-import yaml
 import sys
 import socket
 import threading
@@ -23,7 +21,12 @@ class PassiveThread(Threading):
             self.sock.close()
         except Exception as e:
             self.log_err("ignored exception closing listen socket: %s\n" % str(e))
-
+            
+    def fsm(self):
+        while True:
+            msg = self.socket.recv()
+            self.socket.send(msg)
+            
 class Listener:
 
     def __init__(self,*args,**kwargs):
