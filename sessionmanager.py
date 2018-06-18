@@ -51,10 +51,13 @@ class SessionManager:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures.append(executor.submit(self.get_passive_socket))
             self.peerlist = peerlist
+            print("peerlist: ",str(peerlist))
             for peer in peerlist:
-                peerstate = {}
-                peers[peer] = peerstate
+                #peerstate = {}
+                #peers[peer] = peerstate
+                print("scheduling active session request for %s",str(peer))
                 futures.append(executor.submit(self.get_active_socket,peer))
+            print("starting main loop")
 
             while True:
                 done,not_done = concurrent.futures.wait(futures, return_when=FIRST_COMPLETED)
@@ -141,9 +144,9 @@ class SessionManager:
         except (socket.herror,socket.gaierror) as e:
             print("unknown socket error %s" % e)
             raise
-        except Exception as e:
-            print("unknown error %s" % e)
-            raise
+        # except Exception as e:
+            # print("unknown error %s" % e)
+            # raise
         return (_NEW_ACTIVE_SOCKET,sock,remote_address[0])
 
     def fsm(self,sock,peer):
