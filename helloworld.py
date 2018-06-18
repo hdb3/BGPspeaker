@@ -12,7 +12,7 @@ def get_local_ipv4_addresses():
             for address_info in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
                 yield address_info['addr']
 
-peers = ["172.16.0.1", "172.16.0.2","172.16.0.3","172.16.0.4"]
+peers = ["192.168.122.1","192.168.122.179","192.168.122.113"]
 local_addresses = list(get_local_ipv4_addresses())
 #print(local_addresses)
 #print(peers)
