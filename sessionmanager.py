@@ -49,7 +49,7 @@ class SessionManager:
             raise
         futures = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures.append(executor.submit(self.get_passive_socket))
+            #futures.append(executor.submit(self.get_passive_socket))
             self.peerlist = peerlist
             print("peerlist: ",str(peerlist))
             for peer in peerlist:
@@ -60,7 +60,7 @@ class SessionManager:
             print("starting main loop")
 
             while True:
-                done,not_done = concurrent.futures.wait(futures, return_when=FIRST_COMPLETED)
+                done,not_done = concurrent.futures.wait(futures, return_when=concurrent.futures.FIRST_COMPLETED)
                 futures = not_done
                 # completed futures may return new sockets, which require to run the FSM
                 # or old sockets from an exiting FSM
@@ -109,11 +109,9 @@ class SessionManager:
 
     def get_passive_socket(self):
 
+        print("accepting on socket")
         try:
-            print("accepting on socket")
             sock,remote_address = self.server_socket.accept()
-            sock.setblocking(True)
-            print("connection received from %s" % str(remote_address))
         except OSError as e:
             print("bind - unknown OS error %d" % e.errno)
             raise
@@ -123,18 +121,22 @@ class SessionManager:
         except Exception as e:
             print("unknown error %s" % e)
             raise
-        return (_NEW_PASSIVE_SOCKET,sock,remote_address[0])
+        else:
+            sock.setblocking(True)
+            print("connection received from %s" % str(remote_address))
+            return (_NEW_PASSIVE_SOCKET,sock,remote_address[0])
 
     def get_active_socket(self,peer):
 
+        print("connecting to %s" % str(peer))
         try:
-            print("connecting to %s" % str(peer))
-            sock = socket.create_connection((peer,_BGP_PORT),self.timeout)
-            remote_address = sock.getpeername()
-            sock.setblocking(True)
-            print("connection complete to %s" % str(remote_address))
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(self.timeout)
+            sock.connect((peer,_BGP_PORT))
+            # sock = socket.create_connection((peer,_BGP_PORT),self.timeout)
         except socket.timeout as e:
-            return (None,peer)
+            sock.close()
+            return (_TIMEOUT_SOCKET,None,peer)
         except socket.error as e:
             print("unknown socket error %s" % e)
             raise
@@ -147,7 +149,11 @@ class SessionManager:
         # except Exception as e:
             # print("unknown error %s" % e)
             # raise
-        return (_NEW_ACTIVE_SOCKET,sock,remote_address[0])
+        else:
+            remote_address = sock.getpeername()
+            print("connection complete to %s" % str(remote_address))
+            sock.setblocking(True)
+            return (_NEW_ACTIVE_SOCKET,sock,remote_address[0])
 
     def fsm(self,sock,peer):
         sock.send("Hello from %s" % str())

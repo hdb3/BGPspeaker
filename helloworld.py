@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
 assert sys.version_info > (3,5)
-from ipaddress import IPv4Address
+#from ipaddress import IPv4Address
 import netifaces
 
 from sessionmanager import SessionManager
@@ -22,5 +22,5 @@ for peer in peers:
         print("using %s" % peer)
         _peers.append(peer)
 
-__peers = list(map(IPv4Address,_peers))
-sm = SessionManager(__peers)
+# __peers = list(map(IPv4Address,_peers))
+sm = SessionManager(_peers)
