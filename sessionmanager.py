@@ -89,7 +89,7 @@ class SessionManager:
                             if remote_address[0] not in self.active_peers:
                                 self.active_peers[remote_address[0]] = 0
                             self.active_peers[remote_address[0]] += 1
-                            futures.append(executor.submit(self.fsm,sock,peer))
+                            futures.append(executor.submit(self._fsm,sock,peer))
                         elif _OLD_SOCKET == status:
                             assert peer in self.active_peers
                             self.active_peers[peer] -= 1
@@ -168,6 +168,7 @@ class SessionManager:
             print("exiting from get_active_socket")
 
     def fsm(self,sock,peer):
+        print("FSM starts for connection to",peer)
         sock.send("Hello from %s" % str())
         while True:
             msg = sock.recv()
@@ -175,6 +176,7 @@ class SessionManager:
                 break
             else:
                 sock.send(msg)
+        print("FSM ends for connection to",peer)
 
     def _fsm(self,sock,peer):
         self.fsm(self,sock,peer)
