@@ -89,7 +89,9 @@ class SessionManager:
                             if remote_address[0] not in self.active_peers:
                                 self.active_peers[remote_address[0]] = 0
                             self.active_peers[remote_address[0]] += 1
+                            print("scheduling FSM for",str(peer))
                             futures.append(executor.submit(self._fsm,sock,peer))
+                            print("scheduled FSM for",str(peer))
                         elif _OLD_SOCKET == status:
                             assert peer in self.active_peers
                             self.active_peers[peer] -= 1
@@ -179,7 +181,9 @@ class SessionManager:
         print("FSM ends for connection to",peer)
 
     def _fsm(self,sock,peer):
+        print("wrapping FSM for",str(peer))
         self.fsm(self,sock,peer)
+        print("unwrapping FSM for",str(peer))
         return (_OLD_SOCKET,sock,peer)
 
 # ugly hack because concurrent.futures has no way to kill child threads
