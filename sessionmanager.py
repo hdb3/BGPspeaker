@@ -182,7 +182,7 @@ class SessionManager:
 
     def _fsm(self,sock,peer):
         print("wrapping FSM for",str(peer))
-        self.fsm(self,sock,peer)
+        self.fsm(sock,peer)
         print("unwrapping FSM for",str(peer))
         return (_OLD_SOCKET,sock,peer)
 
