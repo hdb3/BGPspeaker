@@ -183,7 +183,7 @@ class SessionManager:
 
     def fsm(self,sock,peer):
         print("FSM starts for connection to",peer)
-        sock.send("Hello from %s" % str())
+        sock.send(bytearray("Hello from %s" % str()))
         print("FSM sent first message to",peer)
         while True:
             msg = sock.recv()
