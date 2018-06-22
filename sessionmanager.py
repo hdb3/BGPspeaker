@@ -76,7 +76,9 @@ class SessionManager:
                     # or a timeout after unsuccesful active session request
                     # some of which may require to start another listener/talker
                     if not done:
-                        print("heartbeat")
+                        pass
+                        # print("heartbeat")
+                        # we could do something in this idel time but only if there was someting to do ;-)
 
                     for f in done:
                     # for f in concurrent.futures.as_completed(futures):
@@ -117,8 +119,14 @@ class SessionManager:
                                 sock.shutdown(socket.SHUT_RDWR)
                                 sock.close()
                             # fixme - don't catch all excepetions - what are we trying to catch?
-                            except Exception as e:
-                                print("ignored exception closing socket: %s\n" % str(e))
+                            except socket.error as e:
+                                if e.errno == errno.ENOTCONN:
+                                    print("ENOTCONN exception closing socket")
+                                elif e.errno == errno.ECONNRESET:
+                                    print("ECONNRESET exception closing socket")
+                                else:
+                                    print("exception closing socket: %s\n" % str(e))
+                                    raise
 
                         elif _TIMEOUT_SOCKET == status:
                             assert peer in self.peerlist
@@ -129,7 +137,7 @@ class SessionManager:
             except KeyboardInterrupt:
                 executor.shutdown(wait=False)
                 kill_child_processes(os.getpid())
-                exit()
+                #exit()
 
     def get_passive_socket(self):
 
@@ -157,7 +165,6 @@ class SessionManager:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(self.timeout)
             sock.connect((peer,_BGP_PORT))
-            # sock = socket.create_connection((peer,_BGP_PORT),self.timeout)
         except socket.timeout as e:
             sock.close()
             return (_TIMEOUT_SOCKET,None,peer)
@@ -174,9 +181,6 @@ class SessionManager:
         except (socket.herror,socket.gaierror) as e:
             print("unknown socket error %s" % e)
             raise
-        # except Exception as e:
-            # print("unknown error %s" % e)
-            # raise
         else:
             remote_address = sock.getpeername()
             print("connection complete to %s" % str(remote_address))
@@ -186,18 +190,32 @@ class SessionManager:
             print("exiting from get_active_socket")
 
     def fsm(self,sock,peer):
-        print("FSM starts for connection to",peer)
-        sock.send(bytearray("Hello from %s" % str(),'utf-8'))
-        print("FSM sent first message to",peer)
-        while True:
-            msg = sock.recv(4096)
-            if len(msg) == 0:
-                print("FSM lost connection to",peer)
-                break
-            else:
-                print("FSM received message from",peer)
-                sock.send(msg)
-        print("FSM ends for connection to",peer)
+        connected = True
+        loopcount = 0
+
+        try:
+            print("FSM starts for connection to",peer)
+            sock.send(bytearray("Hello from %s" % str(),'utf-8'))
+            print("FSM sent first message to",peer)
+            while connected and loopcount < 3:
+                msg = sock.recv(4096)
+                if len(msg) == 0:
+                    print("FSM lost connection to",peer)
+                    connected = False
+                else:
+                    print("FSM received message %s from" % str(msg) ,peer)
+                    sock.send(msg)
+                    loopcount += 1
+
+        except socket.error as e:
+            if e.errno == errno.ECONNRESET:
+                print("disconnected")
+                connected = False
+            elif e.errno == errno.EPIPE:
+                print("broken pipe")
+                connected = False
+        finally:
+            print("FSM ends for connection to",peer)
 
     def _fsm(self,sock,peer):
         print("wrapping FSM for",str(peer))
