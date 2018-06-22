@@ -59,16 +59,21 @@ class SessionManager:
 
             try:
                 while True:
-                    # done,not_done = concurrent.futures.wait(futures, return_when=concurrent.futures.FIRST_COMPLETED)
+                    done,not_done = concurrent.futures.wait(futures, timeout=0, return_when=concurrent.futures.FIRST_EXCEPTION)
+                    if done:
+                        print("an exception occured in a running thread")
+                        for f in done:
+                            f.result()
+                    done,not_done = concurrent.futures.wait(futures, timeout=1.0, return_when=concurrent.futures.FIRST_COMPLETED)
                     # futures = list(not_done)
                     # completed futures may return new sockets, which require to run the FSM
                     # or old sockets from an exiting FSM
                     # or a timeout after unsuccesful active session request
                     # some of which may require to start another listener/talker
 
-                    # for f in done:
-                    for f in concurrent.futures.as_completed(futures):
-                        futures.remove(f)
+                    for f in done:
+                    # for f in concurrent.futures.as_completed(futures):
+                        # futures.remove(f)
                         # status,sock,peer = f.result()
                         result = f.result()
                         status,sock,peer = result
@@ -120,7 +125,6 @@ class SessionManager:
 
     def get_passive_socket(self):
 
-        assert False
         print("accepting on socket")
         try:
             sock,remote_address = self.server_socket.accept()
@@ -140,7 +144,6 @@ class SessionManager:
 
     def get_active_socket(self,peer):
 
-        assert False
         print("connecting to %s" % str(peer))
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
