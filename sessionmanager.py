@@ -65,8 +65,11 @@ class SessionManager:
                     if done:
                         print("an exception occured in a running thread")
                         for f in done:
-                            f.result()
+                            futures.remove(f)
+                            print(f.exception())
+                            print(f.result())
                     done,not_done = concurrent.futures.wait(futures, timeout=1.0, return_when=concurrent.futures.FIRST_COMPLETED)
+                    # we could use not done for futures, or rely on remvong them explicitly...
                     # futures = list(not_done)
                     # completed futures may return new sockets, which require to run the FSM
                     # or old sockets from an exiting FSM
@@ -77,7 +80,7 @@ class SessionManager:
 
                     for f in done:
                     # for f in concurrent.futures.as_completed(futures):
-                        # futures.remove(f)
+                        futures.remove(f)
                         # status,sock,peer = f.result()
                         result = f.result()
                         status,sock,peer = result
@@ -126,6 +129,7 @@ class SessionManager:
             except KeyboardInterrupt:
                 executor.shutdown(wait=False)
                 kill_child_processes(os.getpid())
+                exit()
 
     def get_passive_socket(self):
 
@@ -183,10 +187,10 @@ class SessionManager:
 
     def fsm(self,sock,peer):
         print("FSM starts for connection to",peer)
-        sock.send(bytearray("Hello from %s" % str()))
+        sock.send(bytearray("Hello from %s" % str(),'utf-8'))
         print("FSM sent first message to",peer)
         while True:
-            msg = sock.recv()
+            msg = sock.recv(4096)
             if len(msg) == 0:
                 print("FSM lost connection to",peer)
                 break
