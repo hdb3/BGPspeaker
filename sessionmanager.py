@@ -172,11 +172,14 @@ class SessionManager:
     def fsm(self,sock,peer):
         print("FSM starts for connection to",peer)
         sock.send("Hello from %s" % str())
+        print("FSM sent first message to",peer)
         while True:
             msg = sock.recv()
             if len(msg) == 0:
+                print("FSM lost connection to",peer)
                 break
             else:
+                print("FSM received message from",peer)
                 sock.send(msg)
         print("FSM ends for connection to",peer)
 
