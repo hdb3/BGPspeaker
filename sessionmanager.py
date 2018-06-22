@@ -59,14 +59,16 @@ class SessionManager:
 
             try:
                 while True:
-                    done,not_done = concurrent.futures.wait(futures, return_when=concurrent.futures.FIRST_COMPLETED)
-                    futures = list(not_done)
+                    # done,not_done = concurrent.futures.wait(futures, return_when=concurrent.futures.FIRST_COMPLETED)
+                    # futures = list(not_done)
                     # completed futures may return new sockets, which require to run the FSM
                     # or old sockets from an exiting FSM
                     # or a timeout after unsuccesful active session request
                     # some of which may require to start another listener/talker
 
-                    for f in done:
+                    # for f in done:
+                    for f in concurrent.futures.as_completed(futures):
+                        futures.remove(f)
                         # status,sock,peer = f.result()
                         result = f.result()
                         status,sock,peer = result
@@ -102,6 +104,7 @@ class SessionManager:
                             try:
                                 sock.shutdown(socket.SHUT_RDWR)
                                 sock.close()
+                            # fixme - don't catch all excepetions - what are we trying to catch?
                             except Exception as e:
                                 print("ignored exception closing socket: %s\n" % str(e))
 
