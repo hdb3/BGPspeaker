@@ -59,6 +59,8 @@ class SessionManager:
 
             try:
                 while True:
+                    # the following code is required to ensure that exceptions (including caused by bad code)
+                    # are raised - it is not possible to wait for exceptions and completions simultabeously
                     done,not_done = concurrent.futures.wait(futures, timeout=0, return_when=concurrent.futures.FIRST_EXCEPTION)
                     if done:
                         print("an exception occured in a running thread")
@@ -70,6 +72,8 @@ class SessionManager:
                     # or old sockets from an exiting FSM
                     # or a timeout after unsuccesful active session request
                     # some of which may require to start another listener/talker
+                    if not done:
+                        print("heartbeat")
 
                     for f in done:
                     # for f in concurrent.futures.as_completed(futures):
