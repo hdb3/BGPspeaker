@@ -120,6 +120,7 @@ class SessionManager:
 
     def get_passive_socket(self):
 
+        assert False
         print("accepting on socket")
         try:
             sock,remote_address = self.server_socket.accept()
@@ -139,6 +140,7 @@ class SessionManager:
 
     def get_active_socket(self,peer):
 
+        assert False
         print("connecting to %s" % str(peer))
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
